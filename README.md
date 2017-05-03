@@ -4,8 +4,8 @@ findbig
 A command-line utility for finding the biggest files in a directory tree.
 
 ```
-usage: findbig [-h] [-v] [-f FORMAT] [-l LIMIT] [-u {k,b,g,m,t}] [-r ROUND]
-               [-m MIN_SIZE]
+usage: findbig [-h] [-v] [-f FORMAT] [-l LIMIT] [-u {m,t,b,g,k}] [-r ROUND]
+               [-m MIN_SIZE] [-i]
                base_dir
 
 Find large files in a directory
@@ -22,10 +22,11 @@ output options:
                         Output format
   -l LIMIT, --limit LIMIT
                         Limit result count
-  -u {k,b,g,m,t}, --unit {k,b,g,m,t}
+  -u {m,t,b,g,k}, --unit {m,t,b,g,k}
                         Convert sizes to unit
   -r ROUND, --round ROUND
                         Number of places to round to
   -m MIN_SIZE, --min-size MIN_SIZE
                         Ignore files smaller than threshold
+  -i, --live            Print offending files as they are found
 ```
