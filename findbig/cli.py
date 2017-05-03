@@ -23,16 +23,19 @@ unit_names = {
 }
 
 
-def find_files(base_dir, verbose=False):
+def find_files(base_dir, min_size=0, verbose=False):
     for current_dir, subdirs, files in walk(base_dir):
         for file_name in files:
             file_path = normpath(join(current_dir, file_name))
             if not islink(file_path):
                 try:
-                    yield (file_path, getsize(file_path))
+                    file_size = getsize(file_path)
                 except FileNotFoundError:
                     # File disappeared or dangling link
-                    pass
+                    continue
+                if file_size < min_size:
+                    continue
+                yield (file_path, file_size)
 
 
 def size_to_units(size, unit, round_places=0):
@@ -55,10 +58,22 @@ def main():
     output_opts.add_argument("-u", "--unit", choices=unit_sizes.keys(), default="b",
                              help="Convert sizes to unit")
     output_opts.add_argument("-r", "--round", type=int, default=0, help="Number of places to round to")
+    output_opts.add_argument("-m", "--min-size", default="0", help="Ignore files smaller than threshold")
 
     args = parser.parse_args()
 
-    files = [i for i in find_files(args.base_dir, verbose=args.verbose)]
+    min_size = 0
+    if args.min_size:
+        try:
+            min_size = int(args.min_size)
+        except ValueError:
+            try:
+                unit = args.min_size[-1]
+                min_size = int(args.min_size[0:-1]) * unit_sizes[unit.lower()]
+            except (KeyError, ValueError):
+                parser.error("unparseable minimum size: {}".format(args.min_size))
+
+    files = [i for i in find_files(args.base_dir, min_size=min_size, verbose=args.verbose)]
     files.sort(key=lambda x: x[1])
 
     if args.limit:
