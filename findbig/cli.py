@@ -59,6 +59,7 @@ def main():
                              help="Convert sizes to unit")
     output_opts.add_argument("-r", "--round", type=int, default=0, help="Number of places to round to")
     output_opts.add_argument("-m", "--min-size", default="0", help="Ignore files smaller than threshold")
+    output_opts.add_argument("-i", "--live", action="store_true", help="Print offending files as they are found")
 
     args = parser.parse_args()
 
@@ -73,7 +74,21 @@ def main():
             except (KeyError, ValueError):
                 parser.error("unparseable minimum size: {}".format(args.min_size))
 
-    files = [i for i in find_files(args.base_dir, min_size=min_size, verbose=args.verbose)]
+    def print_file(file_info):
+        print(args.format.format(fsize=size_to_units(file_info[1], args.unit, args.round),
+                                 unit=unit_names[args.unit],
+                                 fpath=file_info[0]))
+
+    files = []
+    for item in find_files(args.base_dir, min_size=min_size, verbose=args.verbose):
+        if args.live:
+            print_file(item)
+        else:
+            files.append(item)
+
+    if args.live:
+        return 0
+
     files.sort(key=lambda x: x[1])
 
     if args.limit:
@@ -81,8 +96,7 @@ def main():
 
     for item in files:
         try:
-            print(args.format.format(fsize=size_to_units(item[1], args.unit, args.round), unit=unit_names[args.unit],
-                                     fpath=item[0]))
+            print_file(item)
         except UnicodeEncodeError:
             sys.stderr.write("Invalid UTF-8 file name: {}\n".format(repr(item[0])))
             sys.stderr.flush()
